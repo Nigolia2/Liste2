@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste de Noël</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            background-color: red;
+            color: green;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <button>Liste de Noël</button>
+    <script>
+        // Fonction pour récupérer les données existantes ou initialiser le suivi
+        function getVisitData() {
+            const visitData = localStorage.getItem("visitData");
+            return visitData ? JSON.parse(visitData) : { visits: 0, lastVisit: null };
+        }
+
+        // Fonction pour mettre à jour les données de visite
+        function updateVisitData() {
+            const data = getVisitData();
+            data.visits += 1;
+            data.lastVisit = new Date().toISOString();
+            localStorage.setItem("visitData", JSON.stringify(data));
+            return data;
+        }
+
+        // Fonction pour envoyer les données à une fonction Netlify
+        async function sendVisitDataToNetlify(data) {
+            try {
+                const response = await fetch('/.netlify/functions/store-visit-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    console.log('Données envoyées avec succès');
+                } else {
+                    console.error('Erreur lors de l\'envoi des données:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Erreur lors de la connexion à la fonction Netlify:', error);
+            }
+        }
+
+        // Fonction pour afficher les données de visite
+        async function displayVisitData() {
+            const data = updateVisitData();
+            console.log(`Nombre de visites : ${data.visits}`);
+            console.log(`Dernière visite : ${data.lastVisit}`);
+            alert(`Bienvenue ! Vous avez visité cette page ${data.visits} fois.\nDernière visite : ${data.lastVisit}`);
+
+            // Envoie des données au serveur
+            await sendVisitDataToNetlify(data);
+        }
+
+        // Exécution
+        displayVisitData();
+    </script>
+</body>
+</html>
